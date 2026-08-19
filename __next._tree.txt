@@ -1,6 +1,6 @@
 :HL["/mongolia-trip/_next/static/chunks/2rx9p7w-vjmc-.css","style"]
 :HL["/mongolia-trip/_next/static/chunks/0ey-w_rd84esj.css","style"]
-:HL["/mongolia-trip/_next/static/chunks/2nohiukun_t2d.css","style"]
+:HL["/mongolia-trip/_next/static/chunks/23u7rgou7wfys.css","style"]
 :HL["/mongolia-trip/_next/static/media/7fc9c92292d32c4a-s.p.1ms2rae--hzs0.woff2","font",{"crossOrigin":"","type":"font/woff2"}]
 :HL["/mongolia-trip/_next/static/media/fca78c2ee6cec166-s.p.1sn26-iqxrgtp.woff2","font",{"crossOrigin":"","type":"font/woff2"}]
-0:{"tree":{"name":"","param":null,"prefetchHints":4176,"slots":{"children":{"name":"__PAGE__","param":null,"prefetchHints":4256,"slots":null}}},"staleTime":300,"buildId":"UrxqUVBZkjqfoEAA5KWBg"}
+0:{"tree":{"name":"","param":null,"prefetchHints":4176,"slots":{"children":{"name":"__PAGE__","param":null,"prefetchHints":4256,"slots":null}}},"staleTime":300,"buildId":"FXj6wx3t2khTBGxyv62Vm"}
