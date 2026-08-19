@@ -370,12 +370,30 @@ export function TripApp() {
   const width = swipeWidth || (typeof window === "undefined" ? 0 : window.innerWidth);
   const swiping = dragX !== 0 || swipeSettling;
 
-  const chromeH = pinned ? mapH : headerH;
+  const overlayPad = pinned ? mapH : headerH;
+  const fadePad = pinned ? mapH : headerH + mapH;
 
   const swipeStyle = (offset: number): CSSProperties => ({
     transform: `translate3d(${offset}px, 0, 0)`,
     transition: swipeSettling ? `transform ${SWIPE_MS}ms ${SWIPE_EASE}` : "none",
   });
+
+  const swipeLayer = (layerDay: DayPlan, offset: number) => (
+    <div
+      className="fixed inset-0 z-0 overflow-y-auto bg-cream"
+      style={{ ...swipeStyle(offset), paddingTop: overlayPad }}
+    >
+      {pinned ? null : (
+        <>
+          <div className="mx-auto max-w-xl px-4 pt-5">
+            <DayHeader day={layerDay} />
+          </div>
+          <div style={{ height: mapH }} />
+        </>
+      )}
+      <DayPane day={layerDay} />
+    </div>
+  );
 
   return (
     <MealPicksProvider>
@@ -395,50 +413,45 @@ export function TripApp() {
         />
       </div>
 
-      {swiping && dragX > 0 && prev ? (
+      {swiping && dragX > 0 && prev ? swipeLayer(prev, dragX - width) : null}
+      {swiping && dragX < 0 && next ? swipeLayer(next, dragX + width) : null}
+
+      {pinned ? null : (
         <div
-          className="fixed inset-0 z-0 overflow-y-auto bg-cream"
-          style={{ ...swipeStyle(dragX - width), paddingTop: chromeH }}
+          className="relative z-10 bg-cream"
+          style={swiping ? swipeStyle(dragX) : undefined}
         >
-          <DayPane day={prev} />
+          <div className="mx-auto max-w-xl px-4 pt-5">
+            <DayHeader day={day} />
+          </div>
         </div>
-      ) : null}
-      {swiping && dragX < 0 && next ? (
-        <div
-          className="fixed inset-0 z-0 overflow-y-auto bg-cream"
-          style={{ ...swipeStyle(dragX + width), paddingTop: chromeH }}
-        >
-          <DayPane day={next} />
-        </div>
-      ) : null}
+      )}
+
+      <div
+        ref={mapChromeRef}
+        data-trip-map=""
+        className={
+          pinned
+            ? "sticky top-0 z-40 bg-cream shadow-[0_8px_20px_rgba(26,20,12,0.08)]"
+            : "relative z-30 mx-auto max-w-xl px-4"
+        }
+      >
+        <DayMap
+          day={day}
+          pinned={pinned}
+          onTogglePin={togglePin}
+          onPrev={() => goPrev("start")}
+          onNext={() => goNext("start")}
+          hasPrev={hasPrev}
+          hasNext={hasNext}
+        />
+      </div>
 
       <div
         className="relative z-10 bg-cream"
         style={swiping ? swipeStyle(dragX) : undefined}
         onTransitionEnd={onSwipeTransitionEnd}
       >
-        <div className={`mx-auto max-w-xl px-4 ${pinned ? "hidden" : "pt-5"}`}>
-          <DayHeader day={day} />
-        </div>
-        <div
-          ref={mapChromeRef}
-          data-trip-map=""
-          className={
-            pinned
-              ? "sticky top-0 z-40 bg-cream shadow-[0_8px_20px_rgba(26,20,12,0.08)]"
-              : "mx-auto max-w-xl px-4"
-          }
-        >
-          <DayMap
-            day={day}
-            pinned={pinned}
-            onTogglePin={togglePin}
-            onPrev={() => goPrev("start")}
-            onNext={() => goNext("start")}
-            hasPrev={hasPrev}
-            hasNext={hasNext}
-          />
-        </div>
         {transition?.mode === "stay" ? (
           <DayMorph
             from={transition.from}
@@ -453,7 +466,7 @@ export function TripApp() {
             to={transition.to}
             direction={transition.direction}
             fromScroll={transition.fromScroll}
-            headerH={chromeH}
+            headerH={fadePad}
             onDone={finishTransition}
           />
         ) : (
