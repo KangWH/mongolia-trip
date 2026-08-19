@@ -24,7 +24,7 @@ export function DayPane({
           type="button"
           disabled={!prev || !onPrev}
           onClick={onPrev}
-          className="rounded-2xl bg-paper px-3 py-2.5 text-left text-sm disabled:opacity-30"
+          className="rounded-lg bg-paper px-3 py-2.5 text-left text-sm disabled:opacity-30"
         >
           <span className="block text-[11px] text-muted">이전 날</span>
           {prev ? `${prev.dayNum}일 ${prev.weekday}` : "—"}
@@ -33,7 +33,7 @@ export function DayPane({
           type="button"
           disabled={!next || !onNext}
           onClick={onNext}
-          className="rounded-2xl bg-paper px-3 py-2.5 text-right text-sm disabled:opacity-30"
+          className="rounded-lg bg-paper px-3 py-2.5 text-right text-sm disabled:opacity-30"
         >
           <span className="block text-[11px] text-muted">다음 날</span>
           {next ? `${next.dayNum}일 ${next.weekday}` : "—"}

@@ -64,7 +64,7 @@ export function AnchorCard({ stop }: { stop: PlaceStop }) {
   const heading = stop.role ? roleLabel[stop.role] : kindLabel[stop.kind];
 
   return (
-    <section className="rounded-3xl border border-ink/10 bg-paper px-5 py-5">
+    <section className="rounded-lg border border-ink/10 bg-paper px-5 py-5">
       <div className="flex items-center justify-between gap-3">
         <p className="text-[11px] tracking-[0.18em] text-muted">{heading}</p>
         <KindBadge kind={stop.kind} />
@@ -139,7 +139,7 @@ export function FollowingStops({ stops }: { stops: PlaceStop[] }) {
 
 export function MiddleStop({ stop }: { stop: PlaceStop }) {
   return (
-    <div className="relative ml-8 rounded-2xl border border-ink/10 bg-paper p-4">
+    <div className="relative ml-8 rounded-lg border border-ink/10 bg-paper p-4">
       <span className="absolute top-5 -left-7 h-2.5 w-2.5 rounded-full border-2 border-cream bg-sky-deep" />
       <div className="flex items-start justify-between gap-3">
         <p className="font-mono text-sm text-ember">{stop.time}</p>

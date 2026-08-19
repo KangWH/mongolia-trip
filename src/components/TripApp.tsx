@@ -11,8 +11,10 @@ import {
 } from "react";
 import { DatePicker } from "@/components/DatePicker";
 import { DayCrossfade } from "@/components/DayCrossfade";
+import { DayMap } from "@/components/DayMap";
 import { DayMorph } from "@/components/DayMorph";
 import { DayPane } from "@/components/DayPane";
+import { DayHeader } from "@/components/Stops";
 import {
   dayBySlug,
   dayIndex,
@@ -33,13 +35,6 @@ function atDocumentEdges() {
   const bottom =
     window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 1;
   return { top, bottom };
-}
-
-function scrollPage(to: "start" | "end") {
-  window.scrollTo({
-    top: to === "end" ? document.documentElement.scrollHeight : 0,
-    behavior: "auto",
-  });
 }
 
 const SWIPE_MS = 380;
@@ -98,7 +93,6 @@ export function TripApp() {
     setTransition(null);
     setSlug(next.slug);
     history.replaceState(null, "", `#${next.slug}`);
-    requestAnimationFrame(() => scrollPage(from));
   }, []);
 
   const goTo = useCallback(
@@ -332,9 +326,8 @@ export function TripApp() {
     };
   }, [goNext, goPrev, hasNext, hasPrev, settleSwipe, swipeSettling, transition, slug]);
 
-  const finishTransition = useCallback((current: Transition) => {
+  const finishTransition = useCallback(() => {
     setTransition(null);
-    requestAnimationFrame(() => scrollPage(current.settle));
   }, []);
 
   const day = dayBySlug(slug);
@@ -387,13 +380,17 @@ export function TripApp() {
         style={swiping ? swipeStyle(dragX) : undefined}
         onTransitionEnd={onSwipeTransitionEnd}
       >
+        <div className="mx-auto max-w-xl px-4 pt-5">
+          <DayHeader day={day} />
+          <DayMap day={day} />
+        </div>
         {transition?.mode === "stay" ? (
           <DayMorph
             from={transition.from}
             to={transition.to}
             direction={transition.direction}
             fromScroll={transition.fromScroll}
-            onDone={() => finishTransition(transition)}
+            onDone={finishTransition}
           />
         ) : transition?.mode === "jump" ? (
           <DayCrossfade
@@ -402,8 +399,7 @@ export function TripApp() {
             direction={transition.direction}
             fromScroll={transition.fromScroll}
             headerH={headerH}
-            settle={transition.settle}
-            onDone={() => finishTransition(transition)}
+            onDone={finishTransition}
           />
         ) : (
           <DayPane

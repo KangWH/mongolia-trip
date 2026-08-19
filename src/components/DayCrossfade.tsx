@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
 import { DayPane } from "@/components/DayPane";
 import type { DayPlan } from "@/data/trip";
 
@@ -12,7 +12,6 @@ export function DayCrossfade({
   direction,
   fromScroll,
   headerH,
-  settle,
   onDone,
 }: {
   from: DayPlan;
@@ -20,7 +19,6 @@ export function DayCrossfade({
   direction: "next" | "prev";
   fromScroll: number;
   headerH: number;
-  settle: "start" | "end";
   onDone: () => void;
 }) {
   const onDoneRef = useRef(onDone);
@@ -30,13 +28,6 @@ export function DayCrossfade({
   }, [onDone]);
 
   const goingNext = direction === "next";
-
-  useLayoutEffect(() => {
-    window.scrollTo(
-      0,
-      settle === "end" ? document.documentElement.scrollHeight : 0,
-    );
-  }, [settle]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => onDoneRef.current(), DURATION);

@@ -3,7 +3,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import {
   AnchorCard,
-  DayHeader,
   FollowingStops,
   LeadingStops,
 } from "@/components/Stops";
@@ -61,11 +60,6 @@ export function DayMorph({
       return;
     }
 
-    window.scrollTo(
-      0,
-      goingNext ? 0 : document.documentElement.scrollHeight,
-    );
-
     const dy = firstTop.current - card.getBoundingClientRect().top;
     card.style.transition = "none";
     card.style.transform = `translate3d(0, ${dy}px, 0)`;
@@ -81,14 +75,13 @@ export function DayMorph({
       cancelAnimationFrame(play);
       window.clearTimeout(done);
     };
-  }, [goingNext, phase]);
+  }, [phase]);
 
   return (
-    <div className="mx-auto max-w-xl px-4 pb-4 pt-5">
+    <div className="mx-auto max-w-xl px-4 pb-4">
       {phase === "out" ? (
         <>
           <div className="day-morph-out">
-            <DayHeader day={from} />
             {goingNext ? <LeadingStops stops={from.stops.slice(0, -1)} /> : null}
           </div>
           <div
@@ -108,7 +101,6 @@ export function DayMorph({
           <div
             className={`day-morph-in day-morph-in-above ${entered ? "is-in" : ""}`}
           >
-            <DayHeader day={to} />
             {!goingNext ? <LeadingStops stops={to.stops.slice(0, -1)} /> : null}
           </div>
           <div
