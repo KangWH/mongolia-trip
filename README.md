@@ -14,13 +14,8 @@ npm run dev
 
 ## GitHub Pages 배포
 
-1. GitHub에 이 폴더를 리포지토리로 올립니다. 리포지토리 이름은 `mongolia-trip`을 권장합니다.
-2. GitHub → **Settings** → **Pages** → Source를 **GitHub Actions**로 둡니다.
-3. `main`에 푸시하면 `.github/workflows/deploy.yml`이 정적 파일을 빌드해 배포합니다.
-
-프로젝트 사이트(`https://<계정>.github.io/mongolia-trip/`)와
-사용자 사이트(`https://<계정>.github.io/`) 모두 동작합니다.
-후자는 리포지토리 이름이 `<계정>.github.io`일 때 경로 접두사 없이 배포됩니다.
+`main`에 푸시하면 `gh-pages` 브랜치로 정적 파일이 올라갑니다.
+첫 배포 뒤 **Settings → Pages → Branch**를 `gh-pages` / `/ (root)` 로 두면 됩니다.
 
 ## 스택
 
