@@ -23,7 +23,7 @@
 }
 
 html {
-  scroll-behavior: smooth;
+  scroll-behavior: auto;
 }
 
 .no-scrollbar {
@@ -44,4 +44,89 @@ body {
 ::selection {
   background: #e8c48a;
   color: var(--ink);
+}
+
+@keyframes day-out-up {
+  to {
+    opacity: 0;
+    transform: translate3d(0, -28px, 0);
+  }
+}
+
+@keyframes day-out-down {
+  to {
+    opacity: 0;
+    transform: translate3d(0, 28px, 0);
+  }
+}
+
+@keyframes day-in-up {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 36px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes day-in-down {
+  from {
+    opacity: 0;
+    transform: translate3d(0, -36px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes morph-fade {
+  to {
+    opacity: 0;
+  }
+}
+
+.day-fade-out-up {
+  animation: day-out-up 420ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  pointer-events: none;
+}
+
+.day-fade-out-down {
+  animation: day-out-down 420ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  pointer-events: none;
+}
+
+.day-fade-in-up {
+  animation: day-in-up 460ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.day-fade-in-down {
+  animation: day-in-down 460ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.day-morph-out {
+  animation: morph-fade 200ms ease forwards;
+  pointer-events: none;
+}
+
+.day-morph-in {
+  opacity: 0;
+  transition:
+    opacity 480ms cubic-bezier(0.22, 1, 0.36, 1) 50ms,
+    transform 480ms cubic-bezier(0.22, 1, 0.36, 1) 50ms;
+}
+
+.day-morph-in-above {
+  transform: translate3d(0, -12px, 0);
+}
+
+.day-morph-in-below {
+  transform: translate3d(0, 12px, 0);
+}
+
+.day-morph-in.is-in {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
 }

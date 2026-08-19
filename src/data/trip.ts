@@ -17,6 +17,7 @@ export type PlaceStop = {
   action: string;
   detail?: string;
   href?: string;
+  stayId?: string;
 };
 
 export type DayPlan = {
@@ -93,6 +94,7 @@ export const days: DayPlan[] = [
         role: "sleep",
         area: "울란바토르 시내",
         action: "체크인",
+        stayId: "ub-airbnb",
       },
     ],
   },
@@ -112,6 +114,7 @@ export const days: DayPlan[] = [
         role: "wake",
         area: "울란바토르 시내",
         action: "체크아웃",
+        stayId: "ub-airbnb",
       },
       {
         time: "오전",
@@ -141,6 +144,7 @@ export const days: DayPlan[] = [
         role: "sleep",
         area: "엘승타사르하이",
         action: "체크인",
+        stayId: "gobi-ger",
       },
     ],
   },
@@ -160,6 +164,7 @@ export const days: DayPlan[] = [
         role: "wake",
         area: "엘승타사르하이",
         action: "체크아웃",
+        stayId: "gobi-ger",
       },
       {
         time: "오전",
@@ -182,6 +187,7 @@ export const days: DayPlan[] = [
         role: "sleep",
         area: "울란바토르 시내",
         action: "체크인",
+        stayId: "ub-airbnb",
       },
     ],
   },
@@ -201,6 +207,7 @@ export const days: DayPlan[] = [
         role: "wake",
         area: "울란바토르 시내",
         action: "체크아웃",
+        stayId: "ub-airbnb",
       },
       {
         time: "낮",
@@ -225,6 +232,7 @@ export const days: DayPlan[] = [
         area: "테를지 · 게르",
         action: "체크인",
         href: "https://www.booking.com/hotel/mn/camping-turtle-rock.ko.html",
+        stayId: "turtle-rock",
       },
     ],
   },
@@ -244,6 +252,7 @@ export const days: DayPlan[] = [
         role: "wake",
         area: "테를지 · 게르",
         action: "체크아웃",
+        stayId: "turtle-rock",
       },
       {
         time: "아침",
@@ -267,6 +276,7 @@ export const days: DayPlan[] = [
         area: "UBN → PUS",
         action: "기내 숙박",
         detail: "새벽 출발. 부산 06:50 도착.",
+        stayId: "inflight",
       },
     ],
   },
@@ -286,6 +296,7 @@ export const days: DayPlan[] = [
         role: "wake",
         area: "울란바토르 → 부산",
         action: "기상",
+        stayId: "inflight",
       },
       {
         time: "06:50",
@@ -312,6 +323,25 @@ export const days: DayPlan[] = [
     ],
   },
 ];
+
+export function dayIndex(slug: string) {
+  const i = days.findIndex((day) => day.slug === slug);
+  return i < 0 ? 0 : i;
+}
+
+export function sharedStay(from: DayPlan, to: DayPlan) {
+  const fromI = dayIndex(from.slug);
+  const toI = dayIndex(to.slug);
+  if (toI > fromI) {
+    const stayId = from.stops.at(-1)?.stayId;
+    if (stayId && stayId === to.stops[0]?.stayId) return stayId;
+  }
+  if (toI < fromI) {
+    const stayId = from.stops[0]?.stayId;
+    if (stayId && stayId === to.stops.at(-1)?.stayId) return stayId;
+  }
+  return null;
+}
 
 export function dayBySlug(slug: string) {
   return days.find((day) => day.slug === slug) ?? days[0];
