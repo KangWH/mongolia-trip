@@ -429,7 +429,15 @@ export function TripApp() {
               : "mx-auto max-w-xl px-4"
           }
         >
-          <DayMap day={day} pinned={pinned} onTogglePin={togglePin} />
+          <DayMap
+            day={day}
+            pinned={pinned}
+            onTogglePin={togglePin}
+            onPrev={() => goPrev("start")}
+            onNext={() => goNext("start")}
+            hasPrev={hasPrev}
+            hasNext={hasNext}
+          />
         </div>
         {transition?.mode === "stay" ? (
           <DayMorph
