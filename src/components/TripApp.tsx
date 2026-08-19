@@ -40,6 +40,7 @@ function atDocumentEdges() {
 
 const SWIPE_MS = 380;
 const SWIPE_EASE = "cubic-bezier(0.22, 1, 0.36, 1)";
+const MAP_PIN_KEY = "mongolia-trip-map-pin";
 
 type Transition = {
   from: DayPlan;
@@ -58,11 +59,15 @@ export function TripApp() {
   const [caught, setCaught] = useState<"top" | "bottom" | null>(null);
   const [transition, setTransition] = useState<Transition | null>(null);
   const [headerH, setHeaderH] = useState(88);
+  const [mapH, setMapH] = useState(208);
+  const [pinned, setPinned] = useState(false);
+  const [pinReady, setPinReady] = useState(false);
 
   const index = dayIndex(slug);
   const hasPrev = index > 0;
   const hasNext = index < days.length - 1;
   const headerRef = useRef<HTMLDivElement | null>(null);
+  const mapChromeRef = useRef<HTMLDivElement | null>(null);
   const settleTimer = useRef(0);
   const catchArmed = useRef(false);
   const transitionRef = useRef<Transition | null>(null);
@@ -81,6 +86,34 @@ export function TripApp() {
     const observer = new ResizeObserver(update);
     observer.observe(el);
     return () => observer.disconnect();
+  }, [pinned]);
+
+  useLayoutEffect(() => {
+    const el = mapChromeRef.current;
+    if (!el) return;
+    const update = () => setMapH(el.offsetHeight);
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [pinned, slug]);
+
+  useEffect(() => {
+    try {
+      setPinned(window.localStorage.getItem(MAP_PIN_KEY) === "1");
+    } catch {
+      /* ignore */
+    }
+    setPinReady(true);
+  }, []);
+
+  useEffect(() => {
+    if (!pinReady) return;
+    window.localStorage.setItem(MAP_PIN_KEY, pinned ? "1" : "0");
+  }, [pinReady, pinned]);
+
+  const togglePin = useCallback(() => {
+    setPinned((current) => !current);
   }, []);
 
   const applyDay = useCallback((nextIndex: number, from: "start" | "end" = "start") => {
@@ -240,7 +273,7 @@ export function TripApp() {
     const onTouchStart = (event: TouchEvent) => {
       if (event.touches.length !== 1) return;
       const target = event.target as HTMLElement | null;
-      if (target?.closest("[data-trip-header]")) {
+      if (target?.closest("[data-trip-header], [data-trip-map]")) {
         touch.ignore = true;
         return;
       }
@@ -337,6 +370,8 @@ export function TripApp() {
   const width = swipeWidth || (typeof window === "undefined" ? 0 : window.innerWidth);
   const swiping = dragX !== 0 || swipeSettling;
 
+  const chromeH = pinned ? mapH : headerH;
+
   const swipeStyle = (offset: number): CSSProperties => ({
     transform: `translate3d(${offset}px, 0, 0)`,
     transition: swipeSettling ? `transform ${SWIPE_MS}ms ${SWIPE_EASE}` : "none",
@@ -348,7 +383,7 @@ export function TripApp() {
       <div
         ref={headerRef}
         data-trip-header=""
-        className="sticky top-0 z-40"
+        className={pinned ? "hidden" : "sticky top-0 z-40"}
       >
         <DatePicker
           value={slug}
@@ -363,7 +398,7 @@ export function TripApp() {
       {swiping && dragX > 0 && prev ? (
         <div
           className="fixed inset-0 z-0 overflow-y-auto bg-cream"
-          style={{ ...swipeStyle(dragX - width), paddingTop: headerH }}
+          style={{ ...swipeStyle(dragX - width), paddingTop: chromeH }}
         >
           <DayPane day={prev} />
         </div>
@@ -371,7 +406,7 @@ export function TripApp() {
       {swiping && dragX < 0 && next ? (
         <div
           className="fixed inset-0 z-0 overflow-y-auto bg-cream"
-          style={{ ...swipeStyle(dragX + width), paddingTop: headerH }}
+          style={{ ...swipeStyle(dragX + width), paddingTop: chromeH }}
         >
           <DayPane day={next} />
         </div>
@@ -382,9 +417,19 @@ export function TripApp() {
         style={swiping ? swipeStyle(dragX) : undefined}
         onTransitionEnd={onSwipeTransitionEnd}
       >
-        <div className="mx-auto max-w-xl px-4 pt-5">
+        <div className={`mx-auto max-w-xl px-4 ${pinned ? "hidden" : "pt-5"}`}>
           <DayHeader day={day} />
-          <DayMap day={day} />
+        </div>
+        <div
+          ref={mapChromeRef}
+          data-trip-map=""
+          className={
+            pinned
+              ? "sticky top-0 z-40 bg-cream shadow-[0_8px_20px_rgba(26,20,12,0.08)]"
+              : "mx-auto max-w-xl px-4"
+          }
+        >
+          <DayMap day={day} pinned={pinned} onTogglePin={togglePin} />
         </div>
         {transition?.mode === "stay" ? (
           <DayMorph
@@ -400,7 +445,7 @@ export function TripApp() {
             to={transition.to}
             direction={transition.direction}
             fromScroll={transition.fromScroll}
-            headerH={headerH}
+            headerH={chromeH}
             onDone={finishTransition}
           />
         ) : (

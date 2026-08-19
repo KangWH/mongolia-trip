@@ -123,9 +123,15 @@ export function MealSlotBlock({
             <li key={item.id} className="flex items-start gap-2.5">
               <label className="flex min-w-0 flex-1 cursor-pointer items-start gap-2.5">
                 <input
-                  type="checkbox"
+                  type="radio"
+                  name={`meal-${slug}-${slot}`}
                   checked={on}
-                  onChange={() => toggle(slug, slot, item.id)}
+                  onChange={() => {
+                    if (!on) toggle(slug, slot, item.id);
+                  }}
+                  onClick={() => {
+                    if (on) toggle(slug, slot, item.id);
+                  }}
                   className="mt-0.5 size-4 shrink-0 accent-ember"
                 />
                 <span>

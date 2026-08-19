@@ -97,12 +97,12 @@ export function AnchorCard({ stop }: { stop: PlaceStop }) {
   const heading = stop.role ? roleLabel[stop.role] : kindLabel[stop.kind];
 
   return (
-    <section className="rounded-lg border border-ink/10 bg-paper px-5 py-5">
+    <section className="rounded-lg border border-ink/10 bg-paper px-5 pt-3 pb-5">
       <div className="flex items-center justify-between gap-3">
         <p className="text-[11px] tracking-[0.18em] text-muted">{heading}</p>
         <KindBadge kind={stop.kind} />
       </div>
-      <p className="mt-3 font-mono text-sm text-ember">{stop.time}</p>
+      <p className="mt-2 font-mono text-sm text-ember">{stop.time}</p>
       <h2 className="mt-1 font-serif text-2xl leading-snug">{stop.name}</h2>
       <p className="mt-1 text-sm text-muted">
         {stop.action} · {stop.area}
