@@ -11,6 +11,7 @@ export function DayCrossfade({
   to,
   direction,
   fromScroll,
+  headerH,
   settle,
   onDone,
 }: {
@@ -18,11 +19,10 @@ export function DayCrossfade({
   to: DayPlan;
   direction: "next" | "prev";
   fromScroll: number;
+  headerH: number;
   settle: "start" | "end";
   onDone: () => void;
 }) {
-  const outRef = useRef<HTMLDivElement>(null);
-  const inRef = useRef<HTMLDivElement>(null);
   const onDoneRef = useRef(onDone);
 
   useEffect(() => {
@@ -32,11 +32,11 @@ export function DayCrossfade({
   const goingNext = direction === "next";
 
   useLayoutEffect(() => {
-    if (outRef.current) outRef.current.scrollTop = fromScroll;
-    if (inRef.current && settle === "end") {
-      inRef.current.scrollTop = inRef.current.scrollHeight;
-    }
-  }, [fromScroll, settle]);
+    window.scrollTo(
+      0,
+      settle === "end" ? document.documentElement.scrollHeight : 0,
+    );
+  }, [settle]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => onDoneRef.current(), DURATION);
@@ -44,21 +44,18 @@ export function DayCrossfade({
   }, []);
 
   return (
-    <div className="relative h-full overflow-hidden">
+    <div className="relative">
       <div
-        ref={outRef}
-        className={`absolute inset-0 overflow-y-auto overscroll-none ${
+        className={`pointer-events-none fixed inset-0 z-20 overflow-hidden bg-cream ${
           goingNext ? "day-fade-out-up" : "day-fade-out-down"
         }`}
       >
-        <DayPane day={from} />
+        <div style={{ transform: `translateY(${-fromScroll}px)` }}>
+          <div style={{ height: headerH }} />
+          <DayPane day={from} />
+        </div>
       </div>
-      <div
-        ref={inRef}
-        className={`absolute inset-0 overflow-y-auto overscroll-none ${
-          goingNext ? "day-fade-in-up" : "day-fade-in-down"
-        }`}
-      >
+      <div className={goingNext ? "day-fade-in-up" : "day-fade-in-down"}>
         <DayPane day={to} />
       </div>
     </div>

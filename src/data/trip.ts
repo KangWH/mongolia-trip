@@ -17,6 +17,7 @@ export type PlaceStop = {
   action: string;
   detail?: string;
   href?: string;
+  maps?: string;
   stayId?: string;
 };
 
@@ -53,6 +54,20 @@ export const roleLabel: Record<StopRole, string> = {
   arrive: "도착",
 };
 
+function mapsSearch(query: string) {
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
+}
+
+const maps = {
+  icn: mapsSearch("인천국제공항"),
+  ubn: mapsSearch("Chinggis Khaan International Airport Ulaanbaatar"),
+  elsen: mapsSearch("Elsen Tasarkhai Mini Gobi"),
+  turtleRock: mapsSearch("Turtle Rock Terelj National Park"),
+  campingTurtle: mapsSearch("Camping Turtle Rock Terelj"),
+  statue: mapsSearch("Genghis Khan Equestrian Statue Tsonjin Boldog"),
+  pus: mapsSearch("김해국제공항"),
+};
+
 export const days: DayPlan[] = [
   {
     slug: "23",
@@ -70,6 +85,7 @@ export const days: DayPlan[] = [
         role: "depart",
         area: "인천 · ICN",
         action: "출발 수속",
+        maps: maps.icn,
       },
       {
         time: "10:00",
@@ -86,6 +102,7 @@ export const days: DayPlan[] = [
         area: "울란바토르 · UBN",
         action: "환전",
         detail: "달러 → 투그릭.",
+        maps: maps.ubn,
       },
       {
         time: "저녁",
@@ -129,6 +146,7 @@ export const days: DayPlan[] = [
         kind: "attraction",
         area: "미니사막",
         action: "관광",
+        maps: maps.elsen,
       },
       {
         time: "저녁",
@@ -145,6 +163,7 @@ export const days: DayPlan[] = [
         area: "엘승타사르하이",
         action: "체크인",
         stayId: "gobi-ger",
+        maps: maps.elsen,
       },
     ],
   },
@@ -165,6 +184,7 @@ export const days: DayPlan[] = [
         area: "엘승타사르하이",
         action: "체크아웃",
         stayId: "gobi-ger",
+        maps: maps.elsen,
       },
       {
         time: "오전",
@@ -223,6 +243,7 @@ export const days: DayPlan[] = [
         kind: "attraction",
         area: "고르히-테를지",
         action: "관광",
+        maps: maps.turtleRock,
       },
       {
         time: "15:00–18:00",
@@ -233,6 +254,7 @@ export const days: DayPlan[] = [
         action: "체크인",
         href: "https://www.booking.com/hotel/mn/camping-turtle-rock.ko.html",
         stayId: "turtle-rock",
+        maps: maps.campingTurtle,
       },
     ],
   },
@@ -253,6 +275,7 @@ export const days: DayPlan[] = [
         area: "테를지 · 게르",
         action: "체크아웃",
         stayId: "turtle-rock",
+        maps: maps.campingTurtle,
       },
       {
         time: "아침",
@@ -267,6 +290,7 @@ export const days: DayPlan[] = [
         kind: "attraction",
         area: "테를지–울란바토르 길목",
         action: "관광",
+        maps: maps.statue,
       },
       {
         time: "밤",
@@ -277,6 +301,7 @@ export const days: DayPlan[] = [
         action: "기내 숙박",
         detail: "새벽 출발. 부산 06:50 도착.",
         stayId: "inflight",
+        maps: maps.ubn,
       },
     ],
   },
@@ -304,6 +329,7 @@ export const days: DayPlan[] = [
         role: "arrive",
         area: "부산 · PUS",
         action: "도착",
+        maps: maps.pus,
       },
     ],
   },

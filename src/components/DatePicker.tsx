@@ -20,7 +20,10 @@ export function DatePicker({
   hasNext,
 }: DatePickerProps) {
   return (
-    <div className="absolute inset-x-0 top-0 z-40 border-b border-ink/10 bg-cream/40 backdrop-blur-2xl backdrop-saturate-150">
+    <div
+      data-trip-header=""
+      className="border-b border-ink/10 bg-cream/40 backdrop-blur-2xl backdrop-saturate-150"
+    >
       <div className="mx-auto flex max-w-xl items-end justify-between gap-4 px-4 pb-2 pt-4">
         <div>
           <p className="text-[11px] tracking-[0.22em] text-muted">MONGOLIA 2026</p>

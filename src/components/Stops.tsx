@@ -77,16 +77,7 @@ export function AnchorCard({ stop }: { stop: PlaceStop }) {
       {stop.detail ? (
         <p className="mt-3 text-sm leading-relaxed text-muted">{stop.detail}</p>
       ) : null}
-      {stop.href ? (
-        <a
-          className="mt-4 inline-block text-sm text-ember underline decoration-ember/40 underline-offset-4"
-          href={stop.href}
-          rel="noreferrer"
-          target="_blank"
-        >
-          숙소 보기
-        </a>
-      ) : null}
+      <StopLinks stop={stop} />
     </section>
   );
 }
@@ -161,7 +152,43 @@ export function MiddleStop({ stop }: { stop: PlaceStop }) {
       {stop.detail ? (
         <p className="mt-2 text-sm leading-relaxed text-muted">{stop.detail}</p>
       ) : null}
+      <StopLinks stop={stop} compact />
     </div>
+  );
+}
+
+function StopLinks({
+  stop,
+  compact = false,
+}: {
+  stop: PlaceStop;
+  compact?: boolean;
+}) {
+  if (!stop.maps && !stop.href) return null;
+
+  return (
+    <p className={`flex flex-wrap gap-x-3 gap-y-1 text-sm ${compact ? "mt-2" : "mt-4"}`}>
+      {stop.maps ? (
+        <a
+          className="text-ember underline decoration-ember/40 underline-offset-4"
+          href={stop.maps}
+          rel="noreferrer"
+          target="_blank"
+        >
+          지도
+        </a>
+      ) : null}
+      {stop.href ? (
+        <a
+          className="text-ember underline decoration-ember/40 underline-offset-4"
+          href={stop.href}
+          rel="noreferrer"
+          target="_blank"
+        >
+          숙소 보기
+        </a>
+      ) : null}
+    </p>
   );
 }
 

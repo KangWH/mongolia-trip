@@ -22,11 +22,8 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html
-      lang="ko"
-      className={`${sans.variable} ${serif.variable} h-full antialiased`}
-    >
-      <body className="min-h-full font-sans">{children}</body>
+    <html lang="ko" className={`${sans.variable} ${serif.variable} antialiased`}>
+      <body className="bg-cream font-sans text-ink">{children}</body>
     </html>
   );
 }

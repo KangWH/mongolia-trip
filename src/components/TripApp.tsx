@@ -1,6 +1,14 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type TransitionEvent,
+} from "react";
 import { DatePicker } from "@/components/DatePicker";
 import { DayCrossfade } from "@/components/DayCrossfade";
 import { DayMorph } from "@/components/DayMorph";
@@ -20,11 +28,22 @@ function slugFromLocation() {
   return defaultSlug();
 }
 
-function atEdges(el: HTMLElement) {
-  const top = el.scrollTop <= 1;
-  const bottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 1;
+function atDocumentEdges() {
+  const top = window.scrollY <= 1;
+  const bottom =
+    window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 1;
   return { top, bottom };
 }
+
+function scrollPage(to: "start" | "end") {
+  window.scrollTo({
+    top: to === "end" ? document.documentElement.scrollHeight : 0,
+    behavior: "auto",
+  });
+}
+
+const SWIPE_MS = 380;
+const SWIPE_EASE = "cubic-bezier(0.22, 1, 0.36, 1)";
 
 type Transition = {
   from: DayPlan;
@@ -38,37 +57,53 @@ type Transition = {
 export function TripApp() {
   const [slug, setSlug] = useState(days[0].slug);
   const [dragX, setDragX] = useState(0);
+  const [swipeWidth, setSwipeWidth] = useState(0);
+  const [swipeSettling, setSwipeSettling] = useState(false);
   const [caught, setCaught] = useState<"top" | "bottom" | null>(null);
   const [transition, setTransition] = useState<Transition | null>(null);
+  const [headerH, setHeaderH] = useState(88);
 
   const index = dayIndex(slug);
   const hasPrev = index > 0;
   const hasNext = index < days.length - 1;
-  const paneRef = useRef<HTMLDivElement | null>(null);
+  const headerRef = useRef<HTMLDivElement | null>(null);
   const settleTimer = useRef(0);
   const catchArmed = useRef(false);
   const transitionRef = useRef<Transition | null>(null);
+  const swipeCommit = useRef<"next" | "prev" | null>(null);
+  const swipeSettlingRef = useRef(false);
+  const dragXRef = useRef(0);
   transitionRef.current = transition;
+  swipeSettlingRef.current = swipeSettling;
+  dragXRef.current = dragX;
+
+  useLayoutEffect(() => {
+    const el = headerRef.current;
+    if (!el) return;
+    const update = () => setHeaderH(el.offsetHeight);
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
   const applyDay = useCallback((nextIndex: number, from: "start" | "end" = "start") => {
     const next = days[nextIndex];
     if (!next) return;
     catchArmed.current = false;
+    swipeCommit.current = null;
     setCaught(null);
     setDragX(0);
+    setSwipeSettling(false);
     setTransition(null);
     setSlug(next.slug);
     history.replaceState(null, "", `#${next.slug}`);
-    requestAnimationFrame(() => {
-      const col = paneRef.current;
-      if (!col) return;
-      col.scrollTop = from === "end" ? col.scrollHeight : 0;
-    });
+    requestAnimationFrame(() => scrollPage(from));
   }, []);
 
   const goTo = useCallback(
     (nextIndex: number, from: "start" | "end" = "start", swipe = false) => {
-      if (transitionRef.current) return;
+      if (transitionRef.current || swipeSettlingRef.current) return;
       if (nextIndex === index || nextIndex < 0 || nextIndex >= days.length) return;
       const current = days[index];
       const target = days[nextIndex];
@@ -84,7 +119,7 @@ export function TripApp() {
           from: current,
           to: target,
           direction,
-          fromScroll: paneRef.current?.scrollTop ?? 0,
+          fromScroll: window.scrollY,
           settle: mode === "stay" ? (direction === "next" ? "start" : "end") : from,
           mode,
         });
@@ -109,6 +144,38 @@ export function TripApp() {
     [goTo, index],
   );
 
+  const settleSwipe = useCallback((commit: "next" | "prev" | null, fromX: number) => {
+    const width = swipeWidth || window.innerWidth;
+    const target = commit === "next" ? -width : commit === "prev" ? width : 0;
+    if (Math.abs(target - fromX) < 1) {
+      if (commit === "next") applyDay(index + 1, "start");
+      else if (commit === "prev") applyDay(index - 1, "start");
+      else {
+        setDragX(0);
+        setSwipeSettling(false);
+      }
+      return;
+    }
+    swipeCommit.current = commit;
+    setSwipeSettling(true);
+    requestAnimationFrame(() => setDragX(target));
+  }, [applyDay, index, swipeWidth]);
+
+  const onSwipeTransitionEnd = useCallback(
+    (event: TransitionEvent<HTMLDivElement>) => {
+      if (event.propertyName !== "transform") return;
+      if (!swipeSettlingRef.current) return;
+      const commit = swipeCommit.current;
+      if (commit === "next") applyDay(index + 1, "start");
+      else if (commit === "prev") applyDay(index - 1, "start");
+      else {
+        setDragX(0);
+        setSwipeSettling(false);
+      }
+    },
+    [applyDay, index],
+  );
+
   useEffect(() => {
     const frame = requestAnimationFrame(() => setSlug(slugFromLocation()));
     return () => cancelAnimationFrame(frame);
@@ -116,17 +183,16 @@ export function TripApp() {
 
   useEffect(() => {
     function onKey(event: KeyboardEvent) {
-      if (transition) return;
+      if (transition || swipeSettling) return;
       if (event.key === "ArrowLeft") goPrev();
       if (event.key === "ArrowRight") goNext();
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [goNext, goPrev, transition]);
+  }, [goNext, goPrev, swipeSettling, transition]);
 
   useEffect(() => {
-    const col = paneRef.current;
-    if (!col || transition) return;
+    if (transition || swipeSettling) return;
 
     const armCatch = (edge: "top" | "bottom") => {
       window.clearTimeout(settleTimer.current);
@@ -143,12 +209,12 @@ export function TripApp() {
     };
 
     const onScroll = () => {
-      const { top, bottom } = atEdges(col);
+      const { top, bottom } = atDocumentEdges();
       if (!top && !bottom) clearCatch();
     };
 
     const onWheel = (event: WheelEvent) => {
-      const { top, bottom } = atEdges(col);
+      const { top, bottom } = atDocumentEdges();
       if (event.deltaY > 0 && bottom && hasNext) {
         event.preventDefault();
         if (catchArmed.current) goNext("start");
@@ -170,22 +236,39 @@ export function TripApp() {
       axis: "" as "" | "x" | "y",
       atTop: false,
       atBottom: false,
+      lastX: 0,
+      lastT: 0,
+      vx: 0,
+      ignore: false,
     };
 
     const onTouchStart = (event: TouchEvent) => {
+      if (event.touches.length !== 1) return;
+      const target = event.target as HTMLElement | null;
+      if (target?.closest("[data-trip-header]")) {
+        touch.ignore = true;
+        return;
+      }
       const point = event.touches[0];
-      const { top, bottom } = atEdges(col);
+      const { top, bottom } = atDocumentEdges();
+      touch.ignore = false;
       touch.x = point.clientX;
       touch.y = point.clientY;
+      touch.lastX = point.clientX;
+      touch.lastT = event.timeStamp;
+      touch.vx = 0;
       touch.axis = "";
       touch.atTop = top;
       touch.atBottom = bottom;
+      setSwipeWidth(window.innerWidth);
     };
 
     const onTouchMove = (event: TouchEvent) => {
+      if (touch.ignore || event.touches.length !== 1) return;
       const point = event.touches[0];
       const dx = point.clientX - touch.x;
       const dy = point.clientY - touch.y;
+      const dt = event.timeStamp - touch.lastT;
 
       if (!touch.axis && (Math.abs(dx) > 10 || Math.abs(dy) > 10)) {
         touch.axis = Math.abs(dx) > Math.abs(dy) ? "x" : "y";
@@ -193,6 +276,11 @@ export function TripApp() {
 
       if (touch.axis === "x") {
         event.preventDefault();
+        if (dt > 0) {
+          touch.vx = (point.clientX - touch.lastX) / dt;
+        }
+        touch.lastX = point.clientX;
+        touch.lastT = event.timeStamp;
         const resisted =
           dx < 0 && !hasNext ? dx / 3 : dx > 0 && !hasPrev ? dx / 3 : dx;
         setDragX(resisted);
@@ -200,117 +288,131 @@ export function TripApp() {
     };
 
     const onTouchEnd = (event: TouchEvent) => {
+      if (touch.ignore) {
+        touch.ignore = false;
+        return;
+      }
       const point = event.changedTouches[0];
       const dx = point.clientX - touch.x;
       const dy = point.clientY - touch.y;
+      const width = window.innerWidth;
+      const vx = touch.vx;
 
       if (touch.axis === "x") {
-        if (dx < -56 && hasNext) goNext("start", true);
-        else if (dx > 56 && hasPrev) goPrev("start", true);
-        else setDragX(0);
+        const toNext = hasNext && (dx < -width * 0.22 || vx < -0.55);
+        const toPrev = hasPrev && (dx > width * 0.22 || vx > 0.55);
+        settleSwipe(toNext ? "next" : toPrev ? "prev" : null, dragXRef.current);
         return;
       }
 
       setDragX(0);
 
-      if (touch.atBottom && dy < -28 && hasNext) {
+      if (touch.atBottom && dy < -64 && hasNext) {
         goNext("start");
         return;
       }
-      if (touch.atTop && dy > 28 && hasPrev) {
+      if (touch.atTop && dy > 64 && hasPrev) {
         goPrev("end");
       }
     };
 
-    col.addEventListener("scroll", onScroll, { passive: true });
-    col.addEventListener("wheel", onWheel, { passive: false });
-    col.addEventListener("touchstart", onTouchStart, { passive: true });
-    col.addEventListener("touchmove", onTouchMove, { passive: false });
-    col.addEventListener("touchend", onTouchEnd);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("wheel", onWheel, { passive: false });
+    window.addEventListener("touchstart", onTouchStart, { passive: true });
+    window.addEventListener("touchmove", onTouchMove, { passive: false });
+    window.addEventListener("touchend", onTouchEnd);
 
     return () => {
-      col.removeEventListener("scroll", onScroll);
-      col.removeEventListener("wheel", onWheel);
-      col.removeEventListener("touchstart", onTouchStart);
-      col.removeEventListener("touchmove", onTouchMove);
-      col.removeEventListener("touchend", onTouchEnd);
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("wheel", onWheel);
+      window.removeEventListener("touchstart", onTouchStart);
+      window.removeEventListener("touchmove", onTouchMove);
+      window.removeEventListener("touchend", onTouchEnd);
       window.clearTimeout(settleTimer.current);
     };
-  }, [goNext, goPrev, hasNext, hasPrev, transition, slug]);
+  }, [goNext, goPrev, hasNext, hasPrev, settleSwipe, swipeSettling, transition, slug]);
 
   const finishTransition = useCallback((current: Transition) => {
     setTransition(null);
-    requestAnimationFrame(() => {
-      const col = paneRef.current;
-      if (!col) return;
-      col.scrollTop = current.settle === "end" ? col.scrollHeight : 0;
-    });
+    requestAnimationFrame(() => scrollPage(current.settle));
   }, []);
 
   const day = dayBySlug(slug);
   const prev = days[index - 1];
   const next = days[index + 1];
+  const width = swipeWidth || (typeof window === "undefined" ? 0 : window.innerWidth);
+  const swiping = dragX !== 0 || swipeSettling;
+
+  const swipeStyle = (offset: number): CSSProperties => ({
+    transform: `translate3d(${offset}px, 0, 0)`,
+    transition: swipeSettling ? `transform ${SWIPE_MS}ms ${SWIPE_EASE}` : "none",
+  });
 
   return (
-    <div className="relative h-dvh overflow-hidden bg-cream text-ink">
-      <DatePicker
-        value={slug}
-        onChange={(nextSlug) => goTo(dayIndex(nextSlug), "start")}
-        onPrev={() => goPrev("start")}
-        onNext={() => goNext("start")}
-        hasPrev={hasPrev}
-        hasNext={hasNext}
-      />
-      <div className="h-full overflow-hidden">
-        {dragX > 0 && prev ? (
-          <div
-            className="absolute inset-0 overflow-y-auto"
-            style={{ transform: `translate3d(calc(${dragX}px - 100%), 0, 0)` }}
-          >
-            <DayPane day={prev} />
-          </div>
-        ) : null}
-        {dragX < 0 && next ? (
-          <div
-            className="absolute inset-0 overflow-y-auto"
-            style={{ transform: `translate3d(calc(${dragX}px + 100%), 0, 0)` }}
-          >
-            <DayPane day={next} />
-          </div>
-        ) : null}
+    <div className="bg-cream text-ink">
+      <div
+        ref={headerRef}
+        data-trip-header=""
+        className="sticky top-0 z-40"
+      >
+        <DatePicker
+          value={slug}
+          onChange={(nextSlug) => goTo(dayIndex(nextSlug), "start")}
+          onPrev={() => goPrev("start")}
+          onNext={() => goNext("start")}
+          hasPrev={hasPrev}
+          hasNext={hasNext}
+        />
+      </div>
 
+      {swiping && dragX > 0 && prev ? (
         <div
-          className="h-full"
-          style={{ transform: dragX ? `translate3d(${dragX}px, 0, 0)` : undefined }}
+          className="fixed inset-0 z-0 overflow-y-auto bg-cream"
+          style={{ ...swipeStyle(dragX - width), paddingTop: headerH }}
         >
-          {transition?.mode === "stay" ? (
-            <DayMorph
-              from={transition.from}
-              to={transition.to}
-              direction={transition.direction}
-              fromScroll={transition.fromScroll}
-              onDone={() => finishTransition(transition)}
-            />
-          ) : transition?.mode === "jump" ? (
-            <DayCrossfade
-              from={transition.from}
-              to={transition.to}
-              direction={transition.direction}
-              fromScroll={transition.fromScroll}
-              settle={transition.settle}
-              onDone={() => finishTransition(transition)}
-            />
-          ) : (
-            <div ref={paneRef} className="h-full overflow-y-auto overscroll-none">
-              <DayPane
-                day={day}
-                caught={caught}
-                onPrev={() => goPrev("start")}
-                onNext={() => goNext("start")}
-              />
-            </div>
-          )}
+          <DayPane day={prev} />
         </div>
+      ) : null}
+      {swiping && dragX < 0 && next ? (
+        <div
+          className="fixed inset-0 z-0 overflow-y-auto bg-cream"
+          style={{ ...swipeStyle(dragX + width), paddingTop: headerH }}
+        >
+          <DayPane day={next} />
+        </div>
+      ) : null}
+
+      <div
+        className="relative z-10 bg-cream"
+        style={swiping ? swipeStyle(dragX) : undefined}
+        onTransitionEnd={onSwipeTransitionEnd}
+      >
+        {transition?.mode === "stay" ? (
+          <DayMorph
+            from={transition.from}
+            to={transition.to}
+            direction={transition.direction}
+            fromScroll={transition.fromScroll}
+            onDone={() => finishTransition(transition)}
+          />
+        ) : transition?.mode === "jump" ? (
+          <DayCrossfade
+            from={transition.from}
+            to={transition.to}
+            direction={transition.direction}
+            fromScroll={transition.fromScroll}
+            headerH={headerH}
+            settle={transition.settle}
+            onDone={() => finishTransition(transition)}
+          />
+        ) : (
+          <DayPane
+            day={day}
+            caught={caught}
+            onPrev={() => goPrev("start")}
+            onNext={() => goNext("start")}
+          />
+        )}
       </div>
     </div>
   );

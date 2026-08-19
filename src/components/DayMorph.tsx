@@ -28,7 +28,6 @@ export function DayMorph({
   const goingNext = direction === "next";
   const [phase, setPhase] = useState<"out" | "in">("out");
   const [entered, setEntered] = useState(false);
-  const paneRef = useRef<HTMLDivElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
   const firstTop = useRef(0);
   const onDoneRef = useRef(onDone);
@@ -42,8 +41,8 @@ export function DayMorph({
   const cardSpaced = (phase === "out" && goingNext) || (phase === "in" && !goingNext);
 
   useLayoutEffect(() => {
-    if (phase !== "out" || !paneRef.current) return;
-    paneRef.current.scrollTop = fromScroll;
+    if (phase !== "out") return;
+    window.scrollTo(0, fromScroll);
   }, [fromScroll, phase]);
 
   useEffect(() => {
@@ -56,16 +55,16 @@ export function DayMorph({
 
   useLayoutEffect(() => {
     if (phase !== "in") return;
-    const pane = paneRef.current;
     const card = cardRef.current;
-    if (!pane || !card) {
+    if (!card) {
       onDoneRef.current();
       return;
     }
 
-    pane.scrollTop = goingNext
-      ? 0
-      : Math.max(0, pane.scrollHeight - pane.clientHeight);
+    window.scrollTo(
+      0,
+      goingNext ? 0 : document.documentElement.scrollHeight,
+    );
 
     const dy = firstTop.current - card.getBoundingClientRect().top;
     card.style.transition = "none";
@@ -85,50 +84,48 @@ export function DayMorph({
   }, [goingNext, phase]);
 
   return (
-    <div ref={paneRef} className="h-full overflow-y-auto overscroll-none">
-      <div className="mx-auto max-w-xl px-4 pb-4 pt-28">
-        {phase === "out" ? (
-          <>
-            <div className="day-morph-out">
-              <DayHeader day={from} />
-              {goingNext ? <LeadingStops stops={from.stops.slice(0, -1)} /> : null}
+    <div className="mx-auto max-w-xl px-4 pb-4 pt-5">
+      {phase === "out" ? (
+        <>
+          <div className="day-morph-out">
+            <DayHeader day={from} />
+            {goingNext ? <LeadingStops stops={from.stops.slice(0, -1)} /> : null}
+          </div>
+          <div
+            ref={cardRef}
+            className={`relative z-10 ${cardSpaced ? "mt-3" : ""}`}
+          >
+            <AnchorCard stop={phase === "out" ? sharedFrom : sharedTo} />
+          </div>
+          {!goingNext ? (
+            <div className="day-morph-out mt-3">
+              <FollowingStops stops={from.stops.slice(1)} />
             </div>
+          ) : null}
+        </>
+      ) : (
+        <>
+          <div
+            className={`day-morph-in day-morph-in-above ${entered ? "is-in" : ""}`}
+          >
+            <DayHeader day={to} />
+            {!goingNext ? <LeadingStops stops={to.stops.slice(0, -1)} /> : null}
+          </div>
+          <div
+            ref={cardRef}
+            className={`relative z-10 ${cardSpaced ? "mt-3" : ""}`}
+          >
+            <AnchorCard stop={sharedTo} />
+          </div>
+          {goingNext ? (
             <div
-              ref={cardRef}
-              className={`relative z-10 ${cardSpaced ? "mt-3" : ""}`}
+              className={`day-morph-in day-morph-in-below mt-3 ${entered ? "is-in" : ""}`}
             >
-              <AnchorCard stop={phase === "out" ? sharedFrom : sharedTo} />
+              <FollowingStops stops={to.stops.slice(1)} />
             </div>
-            {!goingNext ? (
-              <div className="day-morph-out mt-3">
-                <FollowingStops stops={from.stops.slice(1)} />
-              </div>
-            ) : null}
-          </>
-        ) : (
-          <>
-            <div
-              className={`day-morph-in day-morph-in-above ${entered ? "is-in" : ""}`}
-            >
-              <DayHeader day={to} />
-              {!goingNext ? <LeadingStops stops={to.stops.slice(0, -1)} /> : null}
-            </div>
-            <div
-              ref={cardRef}
-              className={`relative z-10 ${cardSpaced ? "mt-3" : ""}`}
-            >
-              <AnchorCard stop={sharedTo} />
-            </div>
-            {goingNext ? (
-              <div
-                className={`day-morph-in day-morph-in-below mt-3 ${entered ? "is-in" : ""}`}
-              >
-                <FollowingStops stops={to.stops.slice(1)} />
-              </div>
-            ) : null}
-          </>
-        )}
-      </div>
+          ) : null}
+        </>
+      )}
     </div>
   );
 }
