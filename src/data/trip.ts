@@ -18,6 +18,8 @@ export type PlaceStop = {
   detail?: string;
   href?: string;
   maps?: string;
+  lat?: number;
+  lng?: number;
   stayId?: string;
 };
 
@@ -58,14 +60,21 @@ function mapsSearch(query: string) {
   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
 }
 
-const maps = {
-  icn: mapsSearch("인천국제공항"),
-  ubn: mapsSearch("Chinggis Khaan International Airport Ulaanbaatar"),
-  elsen: mapsSearch("Elsen Tasarkhai Mini Gobi"),
-  turtleRock: mapsSearch("Turtle Rock Terelj National Park"),
-  campingTurtle: mapsSearch("Camping Turtle Rock Terelj"),
-  statue: mapsSearch("Genghis Khan Equestrian Statue Tsonjin Boldog"),
-  pus: mapsSearch("김해국제공항"),
+type Geo = { maps: string; lat: number; lng: number };
+
+function geo(query: string, lat: number, lng: number): Geo {
+  return { maps: mapsSearch(query), lat, lng };
+}
+
+const pin = {
+  icn: geo("인천국제공항", 37.4602, 126.4407),
+  ubn: geo("Chinggis Khaan International Airport Ulaanbaatar", 47.6469, 106.8198),
+  ub: geo("Sükhbaatar Square Ulaanbaatar", 47.9188, 106.9176),
+  elsen: geo("Elsen Tasarkhai Mini Gobi", 47.3313, 103.6895),
+  turtleRock: geo("Turtle Rock Terelj National Park", 47.9085, 107.4238),
+  campingTurtle: geo("Camping Turtle Rock Terelj", 47.9058, 107.4262),
+  statue: geo("Genghis Khan Equestrian Statue Tsonjin Boldog", 47.808, 107.5366),
+  pus: geo("김해국제공항", 35.1795, 128.9382),
 };
 
 export const days: DayPlan[] = [
@@ -85,7 +94,7 @@ export const days: DayPlan[] = [
         role: "depart",
         area: "인천 · ICN",
         action: "출발 수속",
-        maps: maps.icn,
+        ...pin.icn,
       },
       {
         time: "10:00",
@@ -102,7 +111,7 @@ export const days: DayPlan[] = [
         area: "울란바토르 · UBN",
         action: "환전",
         detail: "달러 → 투그릭.",
-        maps: maps.ubn,
+        ...pin.ubn,
       },
       {
         time: "저녁",
@@ -112,6 +121,8 @@ export const days: DayPlan[] = [
         area: "울란바토르 시내",
         action: "체크인",
         stayId: "ub-airbnb",
+        lat: pin.ub.lat,
+        lng: pin.ub.lng,
       },
     ],
   },
@@ -132,6 +143,8 @@ export const days: DayPlan[] = [
         area: "울란바토르 시내",
         action: "체크아웃",
         stayId: "ub-airbnb",
+        lat: pin.ub.lat,
+        lng: pin.ub.lng,
       },
       {
         time: "오전",
@@ -146,7 +159,7 @@ export const days: DayPlan[] = [
         kind: "attraction",
         area: "미니사막",
         action: "관광",
-        maps: maps.elsen,
+        ...pin.elsen,
       },
       {
         time: "저녁",
@@ -163,7 +176,7 @@ export const days: DayPlan[] = [
         area: "엘승타사르하이",
         action: "체크인",
         stayId: "gobi-ger",
-        maps: maps.elsen,
+        ...pin.elsen,
       },
     ],
   },
@@ -184,7 +197,7 @@ export const days: DayPlan[] = [
         area: "엘승타사르하이",
         action: "체크아웃",
         stayId: "gobi-ger",
-        maps: maps.elsen,
+        ...pin.elsen,
       },
       {
         time: "오전",
@@ -208,6 +221,8 @@ export const days: DayPlan[] = [
         area: "울란바토르 시내",
         action: "체크인",
         stayId: "ub-airbnb",
+        lat: pin.ub.lat,
+        lng: pin.ub.lng,
       },
     ],
   },
@@ -228,6 +243,8 @@ export const days: DayPlan[] = [
         area: "울란바토르 시내",
         action: "체크아웃",
         stayId: "ub-airbnb",
+        lat: pin.ub.lat,
+        lng: pin.ub.lng,
       },
       {
         time: "낮",
@@ -243,7 +260,7 @@ export const days: DayPlan[] = [
         kind: "attraction",
         area: "고르히-테를지",
         action: "관광",
-        maps: maps.turtleRock,
+        ...pin.turtleRock,
       },
       {
         time: "15:00–18:00",
@@ -254,7 +271,7 @@ export const days: DayPlan[] = [
         action: "체크인",
         href: "https://www.booking.com/hotel/mn/camping-turtle-rock.ko.html",
         stayId: "turtle-rock",
-        maps: maps.campingTurtle,
+        ...pin.campingTurtle,
       },
     ],
   },
@@ -275,7 +292,7 @@ export const days: DayPlan[] = [
         area: "테를지 · 게르",
         action: "체크아웃",
         stayId: "turtle-rock",
-        maps: maps.campingTurtle,
+        ...pin.campingTurtle,
       },
       {
         time: "아침",
@@ -290,7 +307,7 @@ export const days: DayPlan[] = [
         kind: "attraction",
         area: "테를지–울란바토르 길목",
         action: "관광",
-        maps: maps.statue,
+        ...pin.statue,
       },
       {
         time: "밤",
@@ -301,7 +318,7 @@ export const days: DayPlan[] = [
         action: "기내 숙박",
         detail: "새벽 출발. 부산 06:50 도착.",
         stayId: "inflight",
-        maps: maps.ubn,
+        ...pin.ubn,
       },
     ],
   },
@@ -321,6 +338,8 @@ export const days: DayPlan[] = [
         area: "제주항공",
         action: "기내",
         stayId: "inflight",
+        lat: pin.ubn.lat,
+        lng: pin.ubn.lng,
       },
       {
         time: "06:50",
@@ -329,11 +348,48 @@ export const days: DayPlan[] = [
         role: "arrive",
         area: "부산 · PUS",
         action: "도착",
-        maps: maps.pus,
+        ...pin.pus,
       },
     ],
   },
 ];
+
+export function dayMapPoints(day: DayPlan) {
+  const points: { name: string; lat: number; lng: number }[] = [];
+  for (const stop of day.stops) {
+    if (stop.lat == null || stop.lng == null) continue;
+    const prev = points.at(-1);
+    if (
+      prev &&
+      Math.abs(prev.lat - stop.lat) < 0.002 &&
+      Math.abs(prev.lng - stop.lng) < 0.002
+    ) {
+      continue;
+    }
+    points.push({
+      name: stop.stayId === "ub-airbnb" ? "울란바토르 시내" : stop.name,
+      lat: stop.lat,
+      lng: stop.lng,
+    });
+  }
+  return points;
+}
+
+export function mapsDirUrl(points: { lat: number; lng: number }[]) {
+  if (points.length === 0) return null;
+  if (points.length === 1) {
+    return `https://www.google.com/maps/search/?api=1&query=${points[0].lat},${points[0].lng}`;
+  }
+  const origin = `${points[0].lat},${points[0].lng}`;
+  const destination = `${points.at(-1)!.lat},${points.at(-1)!.lng}`;
+  const waypoints = points
+    .slice(1, -1)
+    .map((point) => `${point.lat},${point.lng}`)
+    .join("|");
+  const params = new URLSearchParams({ api: "1", origin, destination });
+  if (waypoints) params.set("waypoints", waypoints);
+  return `https://www.google.com/maps/dir/?api=1&${params.toString()}`;
+}
 
 export function dayIndex(slug: string) {
   const i = days.findIndex((day) => day.slug === slug);
