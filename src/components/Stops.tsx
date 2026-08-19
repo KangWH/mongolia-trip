@@ -1,3 +1,6 @@
+import { Fragment } from "react";
+import { MealSlotBlock } from "@/components/MealPicks";
+import { mealSlotsAfter, type MealSlot } from "@/data/meals";
 import {
   kindLabel,
   roleLabel,
@@ -27,26 +30,55 @@ export function DayHeader({ day }: { day: DayPlan }) {
   );
 }
 
-export function StopList({ stops }: { stops: PlaceStop[] }) {
+function MealSlots({
+  slug,
+  after,
+  inset = false,
+}: {
+  slug: string;
+  after: number;
+  inset?: boolean;
+}) {
+  const slots = mealSlotsAfter(slug, after);
+  if (slots.length === 0) return null;
+  return (
+    <>
+      {slots.map((slot: MealSlot) => (
+        <li key={slot} className={inset ? "ml-8" : "mt-5"}>
+          <MealSlotBlock slug={slug} slot={slot} />
+        </li>
+      ))}
+    </>
+  );
+}
+
+export function StopList({ day }: { day: DayPlan }) {
+  const stops = day.stops;
   if (stops.length === 0) return null;
   const first = stops[0];
   const last = stops[stops.length - 1];
   const middle = stops.length > 2 ? stops.slice(1, -1) : [];
   const only = stops.length === 1;
+  const afterFirst = mealSlotsAfter(day.slug, 0);
+  const rail = !only && (middle.length > 0 || afterFirst.length > 0);
 
   return (
     <ol>
       <li>
         <AnchorCard stop={first} />
       </li>
-      {middle.length > 0 ? (
+      {rail ? (
         <li className="relative py-2 pl-1">
           <div className="absolute top-0 bottom-0 left-[1.15rem] w-px bg-ink/10" />
           <ol className="space-y-3 py-3">
-            {middle.map((stop) => (
-              <li key={`${stop.time}-${stop.name}`}>
-                <MiddleStop stop={stop} />
-              </li>
+            <MealSlots slug={day.slug} after={0} inset />
+            {middle.map((stop, index) => (
+              <Fragment key={`${stop.time}-${stop.name}`}>
+                <li>
+                  <MiddleStop stop={stop} />
+                </li>
+                <MealSlots slug={day.slug} after={index + 1} inset />
+              </Fragment>
             ))}
           </ol>
         </li>
@@ -56,6 +88,7 @@ export function StopList({ stops }: { stops: PlaceStop[] }) {
           <AnchorCard stop={last} />
         </li>
       ) : null}
+      <MealSlots slug={day.slug} after={stops.length - 1} />
     </ol>
   );
 }

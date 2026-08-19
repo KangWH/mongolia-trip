@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useMealPicks } from "@/components/MealPicks";
 import { dayMapPoints, mapsDirUrl, type DayPlan } from "@/data/trip";
 
 const MAPS_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? "";
@@ -38,12 +39,27 @@ function markerIcon() {
   };
 }
 
-function paintRoute(map: google.maps.Map, day: DayPlan) {
+function mealIcon() {
+  return {
+    path: google.maps.SymbolPath.CIRCLE,
+    scale: 9,
+    fillColor: "#c48a3a",
+    fillOpacity: 1,
+    strokeColor: "#faf4e8",
+    strokeWeight: 2,
+  };
+}
+
+function paintRoute(
+  map: google.maps.Map,
+  day: DayPlan,
+  meals: { name: string; lat: number; lng: number }[],
+) {
   const route = dayMapPoints(day);
   const markers: google.maps.Marker[] = [];
   let line: google.maps.Polyline | null = null;
 
-  if (route.length === 0) {
+  if (route.length === 0 && meals.length === 0) {
     return { markers, line };
   }
 
@@ -58,6 +74,7 @@ function paintRoute(map: google.maps.Map, day: DayPlan) {
         map,
         position,
         title: point.name,
+        zIndex: 1,
         label: {
           text: String(index + 1),
           color: "#faf4e8",
@@ -80,10 +97,25 @@ function paintRoute(map: google.maps.Map, day: DayPlan) {
     });
   }
 
-  if (route.length === 1) {
+  meals.forEach((meal) => {
+    const position = { lat: meal.lat, lng: meal.lng };
+    bounds.extend(position);
+    markers.push(
+      new google.maps.Marker({
+        map,
+        position,
+        title: meal.name,
+        icon: mealIcon(),
+        zIndex: 1000,
+        optimized: false,
+      }),
+    );
+  });
+
+  if (route.length === 1 && meals.length === 0) {
     map.panTo(route[0]);
     map.setZoom(11);
-  } else {
+  } else if (route.length > 0 || meals.length > 0) {
     map.fitBounds(bounds, 48);
   }
 
@@ -97,6 +129,8 @@ export function DayMap({ day }: { day: DayPlan }) {
   const lineRef = useRef<google.maps.Polyline | null>(null);
   const [failed, setFailed] = useState(!MAPS_KEY);
   const [ready, setReady] = useState(false);
+  const { placesFor, picks } = useMealPicks();
+  const mealKey = JSON.stringify(picks[day.slug] ?? {});
 
   const points = dayMapPoints(day);
   const dirUrl = mapsDirUrl(points);
@@ -143,10 +177,10 @@ export function DayMap({ day }: { day: DayPlan }) {
     markersRef.current.forEach((marker) => marker.setMap(null));
     lineRef.current?.setMap(null);
 
-    const painted = paintRoute(map, day);
+    const painted = paintRoute(map, day, placesFor(day.slug));
     markersRef.current = painted.markers;
     lineRef.current = painted.line;
-  }, [day, failed, ready]);
+  }, [day, failed, mealKey, placesFor, ready]);
 
   if (failed && points.length === 0) return null;
 

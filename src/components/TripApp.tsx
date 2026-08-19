@@ -14,6 +14,7 @@ import { DayCrossfade } from "@/components/DayCrossfade";
 import { DayMap } from "@/components/DayMap";
 import { DayMorph } from "@/components/DayMorph";
 import { DayPane } from "@/components/DayPane";
+import { MealPicksProvider } from "@/components/MealPicks";
 import { DayHeader } from "@/components/Stops";
 import {
   dayBySlug,
@@ -342,6 +343,7 @@ export function TripApp() {
   });
 
   return (
+    <MealPicksProvider>
     <div className="bg-cream text-ink">
       <div
         ref={headerRef}
@@ -411,5 +413,6 @@ export function TripApp() {
         )}
       </div>
     </div>
+    </MealPicksProvider>
   );
 }

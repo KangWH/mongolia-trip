@@ -1,3 +1,5 @@
+import { mealsBySlug, type DayMeals } from "@/data/meals";
+
 export type PlaceKind =
   | "lodging"
   | "airport"
@@ -32,6 +34,7 @@ export type DayPlan = {
   title: string;
   axis: string;
   stops: PlaceStop[];
+  meals?: DayMeals;
 };
 
 export const trip = {
@@ -77,7 +80,7 @@ const pin = {
   pus: geo("김해국제공항", 35.1795, 128.9382),
 };
 
-export const days: DayPlan[] = [
+const rawDays: DayPlan[] = [
   {
     slug: "23",
     date: "2026-08-23",
@@ -100,21 +103,21 @@ export const days: DayPlan[] = [
         time: "10:00",
         name: "인천 → 울란바토르",
         kind: "flight",
-        area: "제주항공",
+        area: "제주항공 7C5203",
         action: "비행",
-        detail: "약 3시간 30분. 시차 −1시간.",
+        detail: "약 3시간 40분. 시차 −1시간.",
       },
       {
-        time: "도착 후",
+        time: "12:40",
         name: "칭기스칸 국제공항",
         kind: "airport",
         area: "울란바토르 · UBN",
         action: "환전",
-        detail: "달러 → 투그릭.",
+        detail: "달러 → 투그릭. 시내까지 약 1시간 30분.",
         ...pin.ubn,
       },
       {
-        time: "저녁",
+        time: "16:00",
         name: "울란바토르 에어비앤비",
         kind: "lodging",
         role: "sleep",
@@ -136,7 +139,7 @@ export const days: DayPlan[] = [
     axis: "울란바토르 → 엘승타사르하이",
     stops: [
       {
-        time: "아침",
+        time: "08:00",
         name: "울란바토르 에어비앤비",
         kind: "lodging",
         role: "wake",
@@ -147,14 +150,14 @@ export const days: DayPlan[] = [
         lng: pin.ub.lng,
       },
       {
-        time: "오전",
+        time: "08:30",
         name: "세미고비로 이동",
         kind: "transit",
         area: "투어 차량 · 4–5시간",
         action: "이동",
       },
       {
-        time: "오후",
+        time: "13:00",
         name: "엘승타사르하이",
         kind: "attraction",
         area: "미니사막",
@@ -162,14 +165,14 @@ export const days: DayPlan[] = [
         ...pin.elsen,
       },
       {
-        time: "저녁",
+        time: "18:30",
         name: "투어 식사",
         kind: "restaurant",
         area: "세미고비 캠프",
         action: "식사",
       },
       {
-        time: "밤",
+        time: "20:00",
         name: "세미고비 투어 게르",
         kind: "lodging",
         role: "sleep",
@@ -190,7 +193,7 @@ export const days: DayPlan[] = [
     axis: "엘승타사르하이 → 울란바토르",
     stops: [
       {
-        time: "아침",
+        time: "07:30",
         name: "세미고비 투어 게르",
         kind: "lodging",
         role: "wake",
@@ -200,21 +203,21 @@ export const days: DayPlan[] = [
         ...pin.elsen,
       },
       {
-        time: "오전",
+        time: "08:00",
         name: "투어 조식",
         kind: "restaurant",
         area: "세미고비 캠프",
         action: "식사",
       },
       {
-        time: "낮",
+        time: "09:00",
         name: "울란바토르로 복귀",
         kind: "transit",
         area: "투어 차량 · 4–5시간",
         action: "이동",
       },
       {
-        time: "저녁",
+        time: "15:00",
         name: "울란바토르 에어비앤비",
         kind: "lodging",
         role: "sleep",
@@ -236,7 +239,7 @@ export const days: DayPlan[] = [
     axis: "울란바토르 → 고르히-테를지",
     stops: [
       {
-        time: "아침",
+        time: "09:00",
         name: "울란바토르 에어비앤비",
         kind: "lodging",
         role: "wake",
@@ -247,15 +250,15 @@ export const days: DayPlan[] = [
         lng: pin.ub.lng,
       },
       {
-        time: "낮",
+        time: "10:00",
         name: "테를지로 이동",
         kind: "transit",
         area: "버스 또는 택시 · 약 2시간",
         action: "이동",
-        detail: "버스는 하루 3회.",
+        detail: "택시면 10:00. 버스는 12:00·16:00 부근.",
       },
       {
-        time: "오후",
+        time: "12:00",
         name: "거북바위",
         kind: "attraction",
         area: "고르히-테를지",
@@ -263,7 +266,7 @@ export const days: DayPlan[] = [
         ...pin.turtleRock,
       },
       {
-        time: "15:00–18:00",
+        time: "15:00",
         name: "Camping Turtle Rock",
         kind: "lodging",
         role: "sleep",
@@ -285,7 +288,7 @@ export const days: DayPlan[] = [
     axis: "테를지 → 울란바토르 공항",
     stops: [
       {
-        time: "아침",
+        time: "07:30",
         name: "Camping Turtle Rock",
         kind: "lodging",
         role: "wake",
@@ -295,28 +298,29 @@ export const days: DayPlan[] = [
         ...pin.campingTurtle,
       },
       {
-        time: "아침",
+        time: "08:00",
         name: "게르 조식",
         kind: "restaurant",
         area: "Turtle Rock",
         action: "식사",
       },
       {
-        time: "낮",
+        time: "10:00",
         name: "칭기스칸 기마상",
         kind: "attraction",
         area: "테를지–울란바토르 길목",
         action: "관광",
+        detail: "단지 09:00–18:00. 테를지에서 약 1시간.",
         ...pin.statue,
       },
       {
-        time: "밤",
+        time: "23:30",
         name: "칭기스칸 국제공항 · 기내",
         kind: "airport",
         role: "sleep",
         area: "UBN → PUS",
         action: "기내 숙박",
-        detail: "새벽 출발. 부산 06:50 도착.",
+        detail: "02:20 출발. 부산 06:50 도착.",
         stayId: "inflight",
         ...pin.ubn,
       },
@@ -332,10 +336,10 @@ export const days: DayPlan[] = [
     axis: "UBN → PUS",
     stops: [
       {
-        time: "새벽",
+        time: "02:20",
         name: "울란바토르 → 부산",
         kind: "flight",
-        area: "제주항공",
+        area: "제주항공 7C5258",
         action: "기내",
         stayId: "inflight",
         lat: pin.ubn.lat,
@@ -353,6 +357,11 @@ export const days: DayPlan[] = [
     ],
   },
 ];
+
+export const days: DayPlan[] = rawDays.map((day) => ({
+  ...day,
+  meals: mealsBySlug[day.slug],
+}));
 
 export function dayMapPoints(day: DayPlan) {
   const points: { name: string; lat: number; lng: number }[] = [];
